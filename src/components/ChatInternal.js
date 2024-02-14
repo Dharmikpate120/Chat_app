@@ -1,51 +1,36 @@
-import React, { useEffect, useRef, useState } from "react";
-import ChatItem from "./ChatItem";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import apiContext from "../Context/apiContext";
 
 const ChatInternal = () => {
+  const [refresher, setRefresher] = useState(false);
+  const { messages, setMessages, sendMessage, chatVisible, socket } =
+    useContext(apiContext);
   const scroller = useRef();
-  console.log(scroller);
-  const [Chats, setChats] = useState([
-    {
-      message:
-        " Lorem ipsum dolor sit amet consectetur adipisicing elit. Labore, deleniti accusantium sint eaque enim, exercitationem corporis eos distinctio reiciendis nesciunt, nemo ipsam saepe?",
-      sender: 1,
-      time: "11:33",
-      seen: 2,
-    },
-    {
-      message:
-        " Lorem ipsum dolor sit amet consectetur adipisicing elit. Labore, deleniti accusantium sint eaque enim, exercitationem corpor  is eos distinctio reiciendis nesciunt, nemo ipsam saepe?",
-      sender: 3,
-      time: "11:33",
-      seen: 2,
-    },
-    {
-      message:
-        " Lorem ipsum dolor sit amet consectetur adipisicing elit. Labore, deleniti accusantium sint eaque enim, exercitationem corporis eos distinctio reiciendis nesciunt, nemo ipsam saepe?",
-      sender: 1,
-      time: "11:33",
-      seen: 2,
-    },
-    {
-      message:
-        " Lorem ipsum dolor sit amet consectetur adipisicing elit. Labore, deleniti accusantium sint eaque enim, exercitationem corporis eos distinctio reiciendis nesciunt, nemo ipsam saepe?",
-      sender: 0,
-      time: "11:33",
-      seen: 2,
-    },
-  ]);
+
+  socket.on("receive", (data) => {
+    console.log(data);
+    setMessages((e) => {
+      if (e[e.length - 1].time === data.time) {
+        return e;
+      }
+      e.push(data);
+      return e;
+    });
+    setRefresher((e) => !e);
+  });
+
   const onclick = () => {
-    setChats([
-      ...Chats,
-      { message: "dharmik patel", sender: 1, time: "11:33", seen: 1 },
-    ]);
+    sendMessage("hello! how are you?");
+    setRefresher((e) => !e);
   };
   useEffect(() => {
-    console.log(scroller.current.scrollHeight);
     scroller.current.scrollTo(0, scroller.current.scrollHeight);
-  }, [Chats]);
+  }, [refresher]);
   return (
-    <div className="internalChat Internal">
+    <div
+      className="internalChat Internal"
+      style={{ display: chatVisible ? "inline" : "none" }}
+    >
       {/* <div className="title">Chat Internal</div> */}
       <div className="receiverInformation">
         <div className="profileInformation">
@@ -64,15 +49,20 @@ const ChatInternal = () => {
         </div>
       </div>
       <div className="chatContainer" ref={scroller}>
-        {Chats.map((item, index) => {
+        {messages.map((item, index) => {
           return (
-            <ChatItem
-              key={index}
-              sender={item.sender}
-              message={item.message}
-              time={item.time}
-              seen={item.seen}
-            />
+            <div className={`chatItem`} key={index}>
+              class:left OR right
+              <div className="message">{item.message}</div>
+              {/* <div className="bottomBar">
+          <div className="time">{props.time}</div>
+          <div className="seenStatus">
+            <i className="fa-solid fa-check-double"></i>
+            <i className="fa-solid fa-check-double"></i>
+            <i className="fa-solid fa-check"></i>
+          </div>
+        </div> */}
+            </div>
           );
         })}
       </div>

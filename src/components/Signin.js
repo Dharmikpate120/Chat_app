@@ -5,8 +5,8 @@ export default function Signin() {
   const { userSignin, userSignup } = useContext(apiContext);
   //backend variables
   const [signinData, setSigninData] = useState({
-    phone: "",
-    password: "",
+    phone: "9723361611",
+    password: "abcdefg",
   });
 
   const [signupData, setSignupData] = useState({

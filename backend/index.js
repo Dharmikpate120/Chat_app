@@ -38,9 +38,8 @@ const upload = multer({
 const app = express();
 const server = createServer(app);
 const io = socket(server, {
-  path: "/chat",
   cors: {
-    origin: "*",
+    origin: "http://localhost:3000",
   },
 });
 
@@ -330,6 +329,24 @@ app.post("/fetchContacts", fetchUser, async (req, res) => {
   res.json({ contacts: container });
 });
 
+app.post("/fetchChats", fetchUser, async (req, res) => {
+  const phone = parseInt(req.body.phone);
+  console.log(req.body);
+  const contactPhone = parseInt(req.body.contactPhone);
+  const tableName = `${
+    phone > contactPhone
+      ? `${contactPhone}_${phone}`
+      : `${phone}_${contactPhone}`
+  }`;
+  chatConnection.query(
+    `SELECT * FROM \`${tableName}\` WHERE 1`,
+    (err, result) => {
+      if (err) console.log(err);
+      res.json(result);
+    }
+  );
+});
+
 const chatConnection = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -337,14 +354,14 @@ const chatConnection = mysql.createConnection({
   database: "chat_app_messages",
 });
 
-function tableCreater(number1, number2) {
+async function tableCreater(number1, number2) {
   try {
     const tableName =
       parseInt(number1) < parseInt(number2)
         ? `${number1}_${number2}`
         : `${number2}_${number1}`;
 
-    chatConnection.query(`CREATE TABLE IF NOT EXISTS ${tableName} (
+    await chatConnection.query(`CREATE TABLE IF NOT EXISTS ${tableName} (
       message TEXT,
       time TEXT,
       sender TEXT
@@ -366,21 +383,26 @@ function messageInserter(tableName, message, sender) {
 
 io.on("connection", (socket) => {
   var roomId;
-
+  var userPhone;
   //"message" event to be emitted when pressed the send button
-  socket.on("message", (messageData) => {
+  socket.on("message", (message) => {
     if (roomId) {
-      messageData = JSON.parse(messageData);
-      console.log(messageData);
-      try{
-
-        messageInserter(roomId,messageData.message,messageData.sender);
-      }catch(err){
-        if(err) console.log(err);
+      message = JSON.parse(message);
+      message = {
+        message: message.message,
+        sender: userPhone,
+        time: Date.now(),
+      };
+      console.log(message);
+      try {
+        messageInserter(roomId, message.message, userPhone);
+      } catch (err) {
+        if (err) console.log(err);
         return;
       }
-      socket.to(roomId).emit("receive", messageData);
+      socket.to(roomId).emit("receive", message);
     } else {
+      socket.emit("unable to send message");
       console.log("please connect to the internet connection and refresh");
     }
   });
@@ -388,6 +410,15 @@ io.on("connection", (socket) => {
   // "chatOpen" event to be emitted on a chat opening (clicking of a chat instance)
   socket.on("chatOpen", async (data) => {
     data = JSON.parse(data);
+    const jwtKey = "Dh4rm1kP473lv";
+
+    try {
+      const result = jwt.verify(data.sender, jwtKey);
+      userPhone = result.phone;
+      data = { ...data, sender: result.phone };
+    } catch (err) {
+      console.log(err);
+    }
 
     if (isNaN(parseInt(data.receiver)) || isNaN(parseInt(data.sender))) {
       return;
@@ -397,12 +428,12 @@ io.on("connection", (socket) => {
         ? `${data.receiver}_${data.sender}`
         : `${data.sender}_${data.receiver}`;
     await tableCreater(data.receiver, data.sender);
-
+    socket.emit("done");
     socket.join(roomId);
     console.log(roomId);
   });
 
-  socket.on("chatClose", (receiver) => {
+  socket.on("chatClose", () => {
     socket.leave(`${roomId}`);
     roomId = null;
   });

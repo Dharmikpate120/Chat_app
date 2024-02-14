@@ -1,48 +1,34 @@
 import React, { useContext } from "react";
-import PersonInstance from "./PersonInstance";
 import apiContext from "../Context/apiContext";
 
-const Chats = () => {
-  const context= useContext(apiContext);
-  const contacts = [
-    {
-      name: "dharmik patel",
-      phoneNumber: 12121212,
-      profile: "hello world",
-      lastOnline: "3:23",
-    },
-    {
-      name: " patel",
-      phoneNumber: 12121212,
-      profile: "hello world",
-      lastOnline: "10:00",
-    },
-    {
-      name: "dhvani patel",
-      phoneNumber: 12121212,
-      profile: "hello world",
-      lastOnline: "13:11",
-    },
-    {
-      name: "vraj patel",
-      phoneNumber: 12121212,
-      profile: "hello world",
-      lastOnline: "7:77",
-    },
-  ];
-  console.log(context.hello);
+const Chats = ({ data }) => {
+  const { fetchChats, chatOpen } = useContext(apiContext);
+  const onClick = (phone) => {
+    chatOpen(phone);
+    fetchChats(phone);
+  };
   return (
     <div className="chatsMain Internal">
       <div className="title">Chats</div>
       <div className="chats">
-        {contacts.map((person) => {
+        {data?.contacts.map((person, index) => {
           return (
-            <PersonInstance
-              name={person.name}
-              profileImage={person.profile}
-              phoneNumber={person.phoneNumber}
-              lastOnline={person.lastOnline}
-            />
+            <div
+              className="chatProfileMain"
+              key={index}
+              onClick={() => {
+                onClick(person.phone);
+              }}
+            >
+              <div className="chatProfileImage">
+                <img src={`${person.profileimage}`} alt="" />
+              </div>
+              <div className="text">
+                <div className="chatProfileName">{person.name}</div>
+                <div className="lastMessage"> {person.phone} </div>
+                {/* <div className="activeTime">{lastOnline}</div> */}
+              </div>
+            </div>
           );
         })}
       </div>
