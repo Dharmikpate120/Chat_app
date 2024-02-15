@@ -331,7 +331,6 @@ app.post("/fetchContacts", fetchUser, async (req, res) => {
 
 app.post("/fetchChats", fetchUser, async (req, res) => {
   const phone = parseInt(req.body.phone);
-  console.log(req.body);
   const contactPhone = parseInt(req.body.contactPhone);
   const tableName = `${
     phone > contactPhone
@@ -342,6 +341,12 @@ app.post("/fetchChats", fetchUser, async (req, res) => {
     `SELECT * FROM \`${tableName}\` WHERE 1`,
     (err, result) => {
       if (err) console.log(err);
+      result.forEach((element, index) => {
+        result[index] = {
+          ...element,
+          class: `${element.sender === `${phone}` ? "right" : "left"}`,
+        };
+      });
       res.json(result);
     }
   );
@@ -392,8 +397,8 @@ io.on("connection", (socket) => {
         message: message.message,
         sender: userPhone,
         time: Date.now(),
+        class: "left",
       };
-      console.log(message);
       try {
         messageInserter(roomId, message.message, userPhone);
       } catch (err) {
@@ -428,9 +433,7 @@ io.on("connection", (socket) => {
         ? `${data.receiver}_${data.sender}`
         : `${data.sender}_${data.receiver}`;
     await tableCreater(data.receiver, data.sender);
-    socket.emit("done");
     socket.join(roomId);
-    console.log(roomId);
   });
 
   socket.on("chatClose", () => {

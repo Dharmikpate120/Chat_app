@@ -9,22 +9,16 @@ const Messanger = (props) => {
   const homeRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [chatVisible, setChatVisible] = useState(false);
-  const chatFetcher = useRef(false);
+  const chatPhone = useRef("");
 
   // socket functions
 
-  socket.on("done", () => {
-    console.log("data");
-    chatFetcher.current = true;
-  });
-
   const sendMessage = (msg) => {
-    var data = { message: msg, time: Date.now(), sender: true };
+    var data = { message: msg, time: Date.now(), sender: true, class: "right" };
     setMessages((e) => {
       e.push(data);
       return e;
     });
-    console.log(msg);
 
     socket.emit("message", JSON.stringify({ message: msg }));
   };
@@ -38,7 +32,6 @@ const Messanger = (props) => {
   // chatOpen({ sender: "9723361611", receiver: "9723361612" });
   const chatClose = () => {
     socket.emit("chatClose");
-    chatFetcher.current = false;
   };
 
   //data variables
@@ -146,7 +139,6 @@ const Messanger = (props) => {
   };
 
   const fetchChats = async (contactPhone) => {
-    console.log(contactPhone);
     if (auth_token.current !== "") {
       var data = await fetch("http://localhost:5000/fetchChats", {
         method: "POST",
@@ -159,7 +151,6 @@ const Messanger = (props) => {
     }
     try {
       data = await data.json();
-      console.log(data);
       setChatVisible(true);
       setMessages(data);
     } catch (err) {
@@ -169,7 +160,6 @@ const Messanger = (props) => {
   return (
     <apiContext.Provider
       value={{
-        chatFetcher,
         sendMessage,
         chatOpen,
         chatClose,
@@ -183,7 +173,8 @@ const Messanger = (props) => {
         setMessages,
         chatVisible,
         fetchChats,
-        socket
+        socket,
+        chatPhone,
       }}
     >
       {props.children}

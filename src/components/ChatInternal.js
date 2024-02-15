@@ -2,10 +2,13 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import apiContext from "../Context/apiContext";
 
 const ChatInternal = () => {
-  const [refresher, setRefresher] = useState(false);
-  const { messages, setMessages, sendMessage, chatVisible, socket } =
-    useContext(apiContext);
   const scroller = useRef();
+  const [refresher, setRefresher] = useState(false);
+
+  const { messages, setMessages, sendMessage, chatVisible, socket, chatPhone } =
+    useContext(apiContext);
+
+  const [text, setText] = useState({ messageText: "" });
 
   socket.on("receive", (data) => {
     console.log(data);
@@ -20,12 +23,17 @@ const ChatInternal = () => {
   });
 
   const onclick = () => {
-    sendMessage("hello! how are you?");
+    sendMessage(text.messageText);
     setRefresher((e) => !e);
+    setText({ messageText: "" });
+  };
+
+  const onTextChange = (e) => {
+    setText({ [e.target.name]: e.target.value });
   };
   useEffect(() => {
     scroller.current.scrollTo(0, scroller.current.scrollHeight);
-  }, [refresher]);
+  }, [refresher, messages]);
   return (
     <div
       className="internalChat Internal"
@@ -50,25 +58,40 @@ const ChatInternal = () => {
       </div>
       <div className="chatContainer" ref={scroller}>
         {messages.map((item, index) => {
+          const date = new Date(parseInt(item.time));
+
           return (
-            <div className={`chatItem`} key={index}>
-              class:left OR right
+            <div className={`chatItem ${item.class}`} key={index}>
               <div className="message">{item.message}</div>
-              {/* <div className="bottomBar">
-          <div className="time">{props.time}</div>
-          <div className="seenStatus">
+              <div className="bottomBar">
+                <div className="time">
+                  {date.getHours() + ":" + date.getMinutes()}
+                </div>
+                {/* <div className="seenStatus">
             <i className="fa-solid fa-check-double"></i>
             <i className="fa-solid fa-check-double"></i>
             <i className="fa-solid fa-check"></i>
-          </div>
-        </div> */}
+          </div> */}
+              </div>
             </div>
           );
         })}
+        {/* <div className="dateViewer">
+        <div className="dateInternal">
+        19, january 2024
+        </div>
+        </div> */}
       </div>
       <div className="chatInputBoxMain">
         <i className="fa-regular fa-face-smile"></i>
-        <input type="text" className="textbox" placeholder="Text Message..." />
+        <input
+          type="text"
+          className="textbox"
+          placeholder="Text Message..."
+          name="messageText"
+          value={text.messageText}
+          onChange={onTextChange}
+        />
         <button className="sendButton" onClick={onclick}>
           send
         </button>

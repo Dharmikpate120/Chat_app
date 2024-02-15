@@ -2,11 +2,13 @@ import React, { useContext } from "react";
 import apiContext from "../Context/apiContext";
 
 const Chats = ({ data }) => {
-  const { fetchChats, chatOpen } = useContext(apiContext);
-  const onClick = (phone) => {
-    chatOpen(phone);
-    fetchChats(phone);
-  };
+  const { fetchChats, chatOpen, chatPhone, scroller } = useContext(apiContext);
+  const onClick = async (phone) => {
+    chatPhone.current = data.phone;
+    await chatOpen(phone);
+    await fetchChats(phone);
+
+    };
   return (
     <div className="chatsMain Internal">
       <div className="title">Chats</div>
