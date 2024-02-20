@@ -3,7 +3,15 @@ import { NavLink, useLocation } from "react-router-dom";
 import apiContext from "../Context/apiContext";
 
 const Navbar = () => {
-  const { homeRef, fetchAuthToken } = useContext(apiContext);
+  const {
+    auth_token,
+    homeRef,
+    fetchAuthToken,
+    setProfileOpener,
+    profileOpener,
+    profileData,
+    fetchProfileData,
+  } = useContext(apiContext);
 
   useEffect(() => {
     const navigation = document.querySelector(".mobileSandwich");
@@ -17,22 +25,14 @@ const Navbar = () => {
     });
     fetchAuthToken();
   }, []);
+  useEffect(() => {
+    fetchProfileData();
+  }, [auth_token]);
   return (
     <div className="navbar">
       <NavLink to="/" ref={homeRef} className="navbarLogo">
         Logo
       </NavLink>
-      {/* <div className="searchbar">
-        <input
-          className="searchText"
-          type="text"
-          placeholder="search..."
-          name="serachBox"
-        />
-        <div className="serachIcon">
-          <i className="fa-solid fa-magnifying-glass"></i>
-        </div>
-      </div> */}
       <div className="mobileSandwich">
         <div></div>
       </div>
@@ -40,9 +40,57 @@ const Navbar = () => {
         <i className="fa-solid fa-xmark closeBtn"></i>
         <ul>
           <li>
-            <NavLink to="/"> Profile </NavLink>
+            {
+              <div
+                className="profileButton"
+                onClick={() => {
+                  if (auth_token.current === "") {
+                    console.log("please Signin First");
+                    return;
+                  }
+                  setProfileOpener(true);
+                }}
+              >
+                {profileData?.name}
+              </div>
+            }
           </li>
         </ul>
+        {profileOpener && (
+          <div className="profileMenuMain">
+            <div
+              className="closeButton"
+              onClick={() => {
+                setProfileOpener(false);
+              }}
+            >
+              &times;
+            </div>
+            <div className="profileMenu">
+              <div className="profileImage">
+                <img
+                  src={`http://localhost:5000/profileImage/${profileData?.profileimage}`}
+                  alt=""
+                />
+              </div>
+              <div className="inputCover">
+                <input className="profileName" value={profileData?.name} />
+                <i className="fa-solid fa-pen"></i>
+              </div>
+              <div className="inputCover">
+                <input
+                  className="profilePhone"
+                  value={profileData?.phonenumber}
+                />
+                <i className="fa-solid fa-pen"></i>
+              </div>
+              <div className="inputCover">
+                <input className="profileEmail" value={profileData?.emailaddress} />
+                <i className="fa-solid fa-pen"></i>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

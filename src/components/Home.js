@@ -3,10 +3,15 @@ import Chats from "./Chats";
 import ChatInternal from "./ChatInternal";
 import SenderProfile from "./SenderProfile";
 import apiContext from "../Context/apiContext";
+import ContactAdder from "./ContactAdder";
 
 const Home = () => {
   const { auth_token, fetchContacts } = useContext(apiContext);
   const [chatData, setChatData] = useState();
+  const [addContact, setAddContact] = useState(false);
+
+  const [newContact, setNewContact] = useState({ name: "", phonenumber: "" });
+
   useEffect(() => {
     if (auth_token.current === "") {
       window.location.pathname = "/signin";
@@ -18,11 +23,19 @@ const Home = () => {
       setChatData(await fetchContacts());
     }
     dataFetcher();
-  }, [fetchContacts]);
+  }, [fetchContacts, chatData]);
   return (
     <>
       <div className="homeMain">
-        <Chats data={chatData} />
+        {addContact && (
+          <ContactAdder
+            newContact={newContact}
+            setNewContact={setNewContact}
+            setChatData={setChatData}
+            setAddContact={setAddContact}
+          />
+        )}
+        <Chats data={chatData} setAddContact={setAddContact} />
         <div className="contentWrapper">
           <ChatInternal />
           <SenderProfile />

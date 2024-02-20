@@ -9,6 +9,8 @@ const Messanger = (props) => {
   const homeRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [chatVisible, setChatVisible] = useState(false);
+  const [profileOpener, setProfileOpener] = useState(false);
+  const [profileData, setProfileData] = useState();
   const chatPhone = useRef("");
 
   // socket functions
@@ -138,6 +140,21 @@ const Messanger = (props) => {
     }
   };
 
+  const addContact = async (newContact) => {
+    if (auth_token.current !== "") {
+      var data = await fetch("http://localhost:5000/addContact", {
+        method: "POST",
+        headers: {
+          auth_token: auth_token.current,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newContact),
+      });
+      data = await data.json();
+      return data;
+    }
+  };
+
   const fetchChats = async (contactPhone) => {
     if (auth_token.current !== "") {
       var data = await fetch("http://localhost:5000/fetchChats", {
@@ -157,6 +174,22 @@ const Messanger = (props) => {
       console.log(err);
     }
   };
+
+  const fetchProfileData = async () => {
+    if (auth_token.current !== "") {
+      var data = await fetch("http://localhost:5000/fetchUserdata", {
+        method: "POST",
+        headers: {
+          auth_token: auth_token.current,
+          "Content-Type": "application/json",
+        },
+      });
+      data = await data.json();
+      console.log(data);
+      setProfileData(data);
+    }
+  };
+
   return (
     <apiContext.Provider
       value={{
@@ -169,12 +202,17 @@ const Messanger = (props) => {
         userSignin,
         userSignup,
         fetchContacts,
+        addContact,
         messages,
         setMessages,
         chatVisible,
         fetchChats,
         socket,
         chatPhone,
+        profileOpener,
+        setProfileOpener,
+        profileData,
+        fetchProfileData,
       }}
     >
       {props.children}
