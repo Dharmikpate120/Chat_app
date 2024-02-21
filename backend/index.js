@@ -179,6 +179,14 @@ app.post("/addUserdata", (req, res) => {
       const phone = fetchUser(req, 1);
       const email = req.body.email;
       const name = req.body.name;
+      const emailString = !email ? "" : `,\`emailaddress\`='${email}'`;
+      const nameString = !name ? "" : `\`name\`='${name}'`;
+      const imageString = !req.file
+        ? ""
+        : `,\`profileimage\`='${req.file.filename}'`;
+      console.log(
+        `UPDATE \`userdata\` SET ${nameString}${imageString} ${emailString} WHERE phonenumber=${phone};`
+      );
       var returnobject = { success: "Data inserted successfully!" };
       if (!req.file) {
         returnobject = {
@@ -188,15 +196,13 @@ app.post("/addUserdata", (req, res) => {
         };
       }
       connection.query(
-        `UPDATE \`userdata\` SET \`name\`='${name}'${
-          !req.file ? "" : `,\`profileimage\`='${req.file.filename}'`
-        },\`emailaddress\`='${email}' WHERE phonenumber=${phone};`,
+        `UPDATE \`userdata\` SET ${nameString}${imageString} ${emailString} WHERE phonenumber=${phone};`,
         (err) => {
           if (err) console.log(err);
         }
       );
-      res.json(returnobject);
     }
+    res.json(returnobject);
   });
 });
 

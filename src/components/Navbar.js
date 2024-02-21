@@ -1,5 +1,5 @@
-import React, { useContext, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router-dom";
 import apiContext from "../Context/apiContext";
 
 const Navbar = () => {
@@ -10,9 +10,18 @@ const Navbar = () => {
     setProfileOpener,
     profileOpener,
     profileData,
+    setProfileData,
     fetchProfileData,
+    updateUserData,
   } = useContext(apiContext);
 
+  const nameRef = useRef();
+  const fileSelector = useRef();
+  const emailRef = useRef();
+  const [changable, setChangable] = useState(true);
+  const [profileImage, setProfileImage] = useState();
+  const [oldProfileImg, setOldProfileImg] = useState(true);
+  const [newImgUrl, setNewImgUrl] = useState();
   useEffect(() => {
     const navigation = document.querySelector(".mobileSandwich");
     var links = document.querySelector(".navigationLinks");
@@ -28,6 +37,18 @@ const Navbar = () => {
   useEffect(() => {
     fetchProfileData();
   }, [auth_token]);
+
+  const editFunction = () => {
+    setChangable(true);
+  };
+
+  const onInputChange = (e) => {
+    if (changable) {
+      setProfileData((prev) => {
+        return { ...prev, [e.target.name]: e.target.value };
+      });
+    }
+  };
   return (
     <div className="navbar">
       <NavLink to="/" ref={homeRef} className="navbarLogo">
@@ -67,27 +88,92 @@ const Navbar = () => {
               &times;
             </div>
             <div className="profileMenu">
-              <div className="profileImage">
-                <img
-                  src={`http://localhost:5000/profileImage/${profileData?.profileimage}`}
-                  alt=""
+              <div
+                className="profileImage"
+                onClick={() => {
+                  fileSelector.current.click();
+                }}
+              >
+                <div className="editHighlighter">
+                  <i className="fa-solid fa-pen"></i>
+                </div>
+                {oldProfileImg && (
+                  <img
+                    src={`http://localhost:5000/profileImage/${profileData?.profileimage}`}
+                    alt=""
+                  />
+                )}
+                {!oldProfileImg && <img src={newImgUrl} />}
+                <input
+                  type="file"
+                  style={{ display: "none" }}
+                  name="profileImage"
+                  ref={fileSelector}
+                  onChange={(e) => {
+                    setProfileImage(e.target.files[0]);
+                    const url = URL.createObjectURL(e.target.files[0]);
+                    setNewImgUrl(url);
+                    setOldProfileImg(false);
+                  }}
                 />
               </div>
               <div className="inputCover">
-                <input className="profileName" value={profileData?.name} />
-                <i className="fa-solid fa-pen"></i>
+                <input
+                  className="profileName"
+                  name="name"
+                  value={profileData?.name}
+                  ref={nameRef}
+                  onChange={onInputChange}
+                  readOnly={!changable}
+                />
+                <i
+                  className="fa-solid fa-pen"
+                  onClick={() => {
+                    nameRef.current.focus();
+                    editFunction();
+                  }}
+                ></i>
               </div>
               <div className="inputCover">
                 <input
                   className="profilePhone"
                   value={profileData?.phonenumber}
+                  readOnly
                 />
-                <i className="fa-solid fa-pen"></i>
               </div>
               <div className="inputCover">
-                <input className="profileEmail" value={profileData?.emailaddress} />
-                <i className="fa-solid fa-pen"></i>
+                <input
+                  className="profileEmail"
+                  name="emailaddress"
+                  value={profileData?.emailaddress}
+                  ref={emailRef}
+                  onChange={onInputChange}
+                  readOnly={!changable}
+                />
+                <i
+                  className="fa-solid fa-pen"
+                  onClick={() => {
+                    emailRef.current.focus();
+                    editFunction();
+                  }}
+                ></i>
               </div>
+              {changable && (
+                <button
+                  className="saveChangesBtn"
+                  onClick={async () => {
+                    const Data = new FormData();
+
+                    Data.append("name", profileData.name);
+                    Data.append("email", profileData.emailaddress);
+                    Data.append("profileImage", profileImage);
+                    await updateUserData(Data);
+                    setChangable(false);
+                  }}
+                >
+                  Save Changes
+                </button>
+              )}
             </div>
           </div>
         )}

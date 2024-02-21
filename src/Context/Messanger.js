@@ -190,6 +190,18 @@ const Messanger = (props) => {
     }
   };
 
+  const updateUserData = async (formData) => {
+    var data = fetch("http://localhost:5000/addUserdata", {
+      method: "POST",
+      headers: {
+        auth_token: auth_token.current,
+      },
+      body: formData,
+    });
+
+    console.log(data);
+  };
+
   return (
     <apiContext.Provider
       value={{
@@ -211,8 +223,10 @@ const Messanger = (props) => {
         chatPhone,
         profileOpener,
         setProfileOpener,
+        setProfileData,
         profileData,
         fetchProfileData,
+        updateUserData,
       }}
     >
       {props.children}
